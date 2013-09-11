@@ -1,4 +1,4 @@
 plugin.video.merdb
-==================
+====================
 
-merdb.ru
+A Video Plugin/Addon for xbmc.
