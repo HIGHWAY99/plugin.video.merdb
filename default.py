@@ -181,8 +181,9 @@ def _FL(t,c,e=''): ### For Custom Text Tags ###
 	else: d=' '+e
 	return '['+c.upper()+d+']'+t+'[/'+c.upper()+']'
 def ParseDescription(plot): ## Cleans up the dumb number stuff thats ugly.
+	if ("&amp;"  in plot):  plot=plot.replace('&amp;'  ,'&')#&amp;#x27;
+	if ("&nbsp;" in plot):  plot=plot.replace('&nbsp;' ," ")
 	if ('&#' in plot) and (';' in plot):
-		if ("&amp;"  in plot):  plot=plot.replace('&amp;'  ,'&')#&amp;#x27;
 		if ("&#8211;" in plot): plot=plot.replace("&#8211;",";") #unknown
 		if ("&#8216;" in plot): plot=plot.replace("&#8216;","'")
 		if ("&#8217;" in plot): plot=plot.replace("&#8217;","'")
@@ -197,7 +198,6 @@ def ParseDescription(plot): ## Cleans up the dumb number stuff thats ugly.
 		if ("&#0421;" in plot): plot=plot.replace('&#0421;',"")
 		if ("&#xE9;" in plot):  plot=plot.replace('&#xE9;' ,"e")
 		if ("&#xE2;" in plot):  plot=plot.replace('&#xE2;' ,"a")
-		if ("&nbsp;" in plot):  plot=plot.replace('&nbsp;' ," ")
 		#if (chr(239) in plot):  plot=plot.replace(chr(239) ,"'")
 		#plot=plot.replace(chr('0x92'),"'")
 		if ('&#' in plot) and (';' in plot):
