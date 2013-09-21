@@ -2,7 +2,7 @@
 ###	#	
 ### # Project: 			#		MerDB.ru - by The Highway 2013.
 ### # Author: 			#		The Highway
-### # Version:			#		v0.1.0
+### # Version:			#		v0.2.0
 ### # Description: 	#		Videos @ MerDB.ru
 ###	#	
 ### ############################################################################################################
@@ -372,6 +372,7 @@ def doSearchNormal(url='',section='',title=''):
 	if (title==''):
 		title=showkeyboard(txtMessage=title,txtHeader="Title:  ("+section+")")
 		if (title=='') or (title=='none') or (title==None) or (title==False): return
+	title=title.replace('%20',' ').strip()
 	#title=title.replace(' ','+')
 	#_param['url']=SearchPrefix % title; deb('Searching for',_param['url']); 
 	BrowseItems(url,section,subsection='',pagestart='1',pagecount='1',genre='',year='',sortby='',search=title)
