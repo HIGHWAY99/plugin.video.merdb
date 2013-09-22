@@ -2,7 +2,7 @@
 ###	#	
 ### # Project: 			#		MerDB.ru - by The Highway 2013.
 ### # Author: 			#		The Highway
-### # Version:			#		v0.2.0
+### # Version:			#		v0.3.0
 ### # Description: 	#		Videos @ MerDB.ru
 ###	#	
 ### ############################################################################################################
@@ -37,10 +37,10 @@ def ps(x):
 		,'clr0': 								'white'
 		,'clr1': 								'blue'
 		,'clr2': 								'white'
-		,'clr3': 								'white'
+		,'clr3': 								'blue'
 		,'clr4': 								'white'
-		,'clr5': 								'white'
-		,'clr6': 								'white'
+		,'clr5': 								'pink'
+		,'clr6': 								'red'
 		,'clr7': 								'white'
 		,'clr8': 								'white'
 		,'clr9': 								'white'
@@ -60,6 +60,32 @@ def ps(x):
 		,'section.tv': 					'tv'
 		,'cMI.showinfo.name': 						'Show Information'
 		,'cMI.showinfo.url': 							'XBMC.Action(Info)'
+		,'cMI.favorites.tv.add.url': 			'XBMC.RunPlugin(%s?mode=%s&section=%s&title=%s&year=%s&img=%s&fanart=%s&country=%s&plot=%s&genre=%s&url=%s&dbid=%s&subfav=%s)'
+		,'cMI.favorites.tv.add.name': 		'Add Favorite'
+		,'cMI.favorites.tv.add.mode': 		'FavoritesAdd'
+		,'cMI.favorites.movie.add.url': 	'XBMC.RunPlugin(%s?mode=%s&section=%s&title=%s&year=%s&img=%s&fanart=%s&country=%s&plot=%s&genre=%s&url=%s&subfav=%s)'
+		,'cMI.favorites.tv.remove.url': 	'XBMC.RunPlugin(%s?mode=%s&section=%s&title=%s&year=%s&img=%s&fanart=%s&country=%s&plot=%s&genre=%s&url=%s&dbid=%s&subfav=%s)'
+		,'cMI.favorites.tv.remove.name': 	'Remove Favorite'
+		,'cMI.favorites.tv.remove.mode': 	'FavoritesRemove'
+		,'cMI.favorites.movie.remove.url': 'XBMC.RunPlugin(%s?mode=%s&section=%s&title=%s&year=%s&img=%s&fanart=%s&country=%s&plot=%s&genre=%s&url=%s&subfav=%s)'
+		,'cMI.airdates.find.name': 				'Find AirDates'
+		,'cMI.airdates.find.url': 				'XBMC.RunPlugin(%s?mode=%s&title=%s)'
+		,'cMI.airdates.find.mode': 				'SearchForAirDates'
+		,'cMI.showinfo.name': 						'Show Information'
+		,'cMI.showinfo.url': 							'XBMC.Action(Info)'
+		,'cMI.1ch.search.folder': 				'plugin.video.1channel'
+		,'cMI.1ch.search.name': 					'Search 1Channel'
+		,'cMI.1ch.search.url': 						'XBMC.Container.Update(%s?mode=7000&section=%s&query=%s)'
+		,'cMI.1ch.search.plugin': 				'plugin://plugin.video.1channel/'
+		,'cMI.1ch.search.section': 				'movies'
+		,'cMI.1ch.search.section.tv': 		'tv'
+		,'cMI.primewire.search.folder': 	'plugin.video.primewire'
+		,'cMI.primewire.search.name': 		'Search PrimeWire.ag'
+		,'cMI.primewire.search.url': 			'XBMC.Container.Update(%s?mode=7000&section=%s&query=%s)'
+		,'cMI.primewire.search.plugin': 	'plugin://plugin.video.primewire/'
+		,'cMI.primewire.search.section': 	'movies'
+		,'cMI.primewire.search.section.tv':	'tv'
+		,'cMI.jDownloader.addlink.url':		'XBMC.RunPlugin(plugin://plugin.program.jdownloader/?action=addlink&url=%s)'
 	}[x]
 
 
@@ -288,6 +314,99 @@ def GRABMETA_(name,types):
 	return infoLabels
 ### ############################################################################################################
 ### ############################################################################################################
+def fav__empty(section,subfav=''): WhereAmI('@ Favorites - Empty - %s%s' % (section,subfav)); favs=[]; cache.set('favs_'+section+subfav+'__', str(favs)); myNote(bFL('Favorites'),bFL('Your Favorites Have Been Wiped Clean. Bye Bye.'))
+def fav__remove(section,name,year,subfav=''):
+	WhereAmI('@ Favorites - Remove - %s%s' % (section,subfav)); deb('fav__remove() '+section,name+'  ('+year+')'); saved_favs=cache.get('favs_'+section+subfav+'__'); tf=False
+	if saved_favs:
+		favs=eval(saved_favs)
+		if favs:
+			for (_name,_year,_img,_fanart,_country,_url,_plot,_genre,_dbid) in favs: 
+				if (name==_name) and (year==_year): favs.remove((_name,_year,_img,_fanart,_country,_url,_plot,_genre,_dbid)); cache.set('favs_'+section+subfav+'__', str(favs)); tf=True; myNote(bFL(name.upper()+'  ('+year+')'),bFL('Removed from Favorites')); deb(name+'  ('+year+')','Removed from Favorites. (Hopefully)'); xbmc.executebuiltin("XBMC.Container.Refresh"); return
+			if (tf==False): myNote(bFL(name.upper()),bFL('not found in your Favorites'))
+		else: myNote(bFL(name.upper()+'  ('+year+')'),bFL('not found in your Favorites'))
+def fav__add(section,name,year='',img=_artIcon,fanart=_artFanart,subfav=''):
+	debob(['fav__add()',section,name+'  ('+year+')',img,fanart])
+	WhereAmI('@ Favorites - Add - %s%s' % (section,subfav)); saved_favs=cache.get('favs_'+section+subfav+'__'); favs=[]; fav_found=False
+	if saved_favs:
+		debob(saved_favs)
+		favs=eval(saved_favs)
+		if favs:
+			debob(favs)
+			for (_name,_year,_img,_fanart,_country,_url,_plot,_genre,_dbid) in favs:
+				if (name==_name) and (year==_year): fav_found=True; myNote(bFL(section+':  '+name.upper()+'  ('+year+')'),bFL('Already in your Favorites')); return
+	if   (section==ps('section.tvshows')):    favs.append((name,year,img,fanart,_param['country'],_param['url'],_param['plot'],_param['genre'],_param['dbid']))
+	elif (section==ps('section.movie')): favs.append((name,year,img,fanart,_param['country'],_param['url'],_param['plot'],_param['genre'],''))
+	else: myNote('Favorites:  '+section,'Section not Found')
+	cache.set('favs_'+section+subfav+'__', str(favs)); myNote(bFL(name+'  ('+year+')'),bFL('Added to Favorites'))
+
+def fav__list(section,subfav=''):
+	WhereAmI('@ Favorites - List - %s%s' % (section,subfav)); saved_favs=cache.get('favs_'+section+subfav+'__'); favs=[]
+	if saved_favs:
+		debob(saved_favs)
+		favs=sorted(eval(saved_favs), key=lambda fav: (fav[1],fav[0]),reverse=True); ItemCount=len(favs)
+		if favs:
+			#if   (section==ps('section.tv')): 		xbmcplugin.setContent( int( sys.argv[1] ), 'tvshows' )
+			#elif (section==ps('section.movie')): 	xbmcplugin.setContent( int( sys.argv[1] ), 'movies' )
+			for (name,year,img,fanart,country,url,plot,genre,dbid) in favs:
+				debob('----------------------------')
+				debob([name,year,img,fanart,country,url,plot,genre,dbid])
+				contextMenuItems=[]; labs2={}; labs2['fanart']=''
+				if   (section==ps('section.tvshows')):
+					labs2['title']=cFL(name+'  ('+cFL(year,ps('clr6'))+')',ps('clr4')); 
+					#labs2['title']=cFL(name,ps('cFL_color3'))
+					labs2['ShowTitle']=name; labs2['year']=year; pars2={'mode': 'GetSeasons', 'section': section, 'url': url, 'img': img, 'image': img, 'fanart': fanart, 'title': name, 'year': year, 'thetvdbid': dbid, 'thetvdb_series_id': dbid, 'Country': country, 'plot': plot }
+					if (country is not ''): labs2['title']=labs2['title']+cFL('  ['+cFL(country,ps('cFL_color3'))+']',ps('cFL_color'))
+					labs2['image']=img; labs2['fanart']=fanart; labs2['PlotOutline']=labs2['plot']=plot; labs2['genre']=genre; labs2['country']=country
+					#
+					##### Right Click Menu for: TV #####
+					contextMenuItems.append((ps('cMI.showinfo.name'),ps('cMI.showinfo.url')))
+					contextMenuItems.append((ps('cMI.airdates.find.name'), 			ps('cMI.airdates.find.url') % (sys.argv[0],ps('cMI.airdates.find.mode'),urllib.quote_plus(name))))
+					if (subfav is not ''): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.1.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),urllib.quote_plus(dbid), '' )))
+					if (tfalse(addst("enable-fav-tv-2"))==True) and (subfav is not '2'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.2.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),urllib.quote_plus(dbid),'2' )))
+					if (tfalse(addst("enable-fav-tv-3"))==True) and (subfav is not '3'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.3.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),urllib.quote_plus(dbid),'3' )))
+					if (tfalse(addst("enable-fav-tv-4"))==True) and (subfav is not '4'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.4.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),urllib.quote_plus(dbid),'4' )))
+					##contextMenuItems.append((ps('cMI.favorites.tv.remove.name'),ps('cMI.favorites.tv.remove.url') % (sys.argv[0],ps('cMI.favorites.tv.remove.mode'),section,urllib.quote_plus(name),year,urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),dbid, '' )))
+					contextMenuItems.append((ps('cMI.favorites.tv.remove.name'),ps('cMI.favorites.tv.remove.url') % (sys.argv[0],ps('cMI.favorites.tv.remove.mode'),section,urllib.quote_plus(name),year,urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),dbid,subfav )))
+					if os.path.exists(xbmc.translatePath(ps('special.home.addons'))+ps('cMI.1ch.search.folder')): contextMenuItems.append((ps('cMI.1ch.search.name'), 				ps('cMI.1ch.search.url') 				% (ps('cMI.1ch.search.plugin')			, ps('cMI.1ch.search.section.tv'), name)))
+					if os.path.exists(xbmc.translatePath(ps('special.home.addons'))+ps('cMI.primewire.search.folder')): contextMenuItems.append((ps('cMI.primewire.search.name'), 	ps('cMI.primewire.search.url') 	% (ps('cMI.primewire.search.plugin'), ps('cMI.primewire.search.section.tv'), name)))
+					#if (fanart is not ''): contextMenuItems.append(('Download Wallpaper', 'XBMC.RunPlugin(%s)' % _addon.build_plugin_url( { 'mode': 'Download' , 'section': ps('section.wallpaper') , 'studio': name+' ('+year+')' , 'img': img , 'url': fanart } ) ))
+					##### Right Click Menu for: TV ##### /\ #####
+					#try: _addon.add_directory2(pars2, labs2, img=img, fanart=fanart, contextmenu_items=contextMenuItems, overlay=7) ## Testing Watched/Unwatched ## 
+					try: _addon.add_directory(pars2, labs2, img=img, fanart=fanart, contextmenu_items=contextMenuItems, total_items=ItemCount)
+					except: deb('Error Listing Item',name+'  ('+year+')')
+				elif (section==ps('section.movie')):
+					#labs2['title']=cFL(name+'  ('+cFL(year,ps('cFL_color2'))+')',ps('cFL_color')); 
+					labs2['title']=cFL(name+'  ('+cFL(year,ps('clr5'))+')',ps('clr3')); 
+					#labs2['title']=cFL(name,ps('cFL_color3'))
+					labs2['image']=img; labs2['fanart']=fanart; labs2['ShowTitle']=name; labs2['year']=year; pars2={'mode': 'GetLinks', 'section': section, 'url': url, 'img': img, 'image': img, 'fanart': fanart, 'title': name, 'year': year }; labs2['plot']=plot
+					##labs2['title']=cFL(name+'  ('+cFL(year,ps('cFL_color2'))+')  ['+cFL(country,ps('cFL_color3'))+']',ps('cFL_color'))
+					#
+					##### Right Click Menu for: TV #####
+					contextMenuItems.append((ps('cMI.showinfo.name'),ps('cMI.showinfo.url')))
+					if (subfav is not ''): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.1.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url), '' )))
+					if (tfalse(addst("enable-fav-movies-2"))==True) and (subfav is not '2'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.2.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),'2' )))
+					if (tfalse(addst("enable-fav-movies-3"))==True) and (subfav is not '3'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.3.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),'3' )))
+					if (tfalse(addst("enable-fav-movies-4"))==True) and (subfav is not '4'): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.4.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(name),urllib.quote_plus(year),urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),'4' )))
+					##contextMenuItems.append((ps('cMI.favorites.tv.remove.name'), 	   ps('cMI.favorites.movie.remove.url') % (sys.argv[0],ps('cMI.favorites.tv.remove.mode'),section,urllib.quote_plus(name),year,urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url), '' )))
+					contextMenuItems.append((ps('cMI.favorites.tv.remove.name'),ps('cMI.favorites.movie.remove.url') % (sys.argv[0],ps('cMI.favorites.tv.remove.mode'),section,urllib.quote_plus(name),year,urllib.quote_plus(img),urllib.quote_plus(fanart),urllib.quote_plus(country),urllib.quote_plus(plot),urllib.quote_plus(genre),urllib.quote_plus(url),subfav )))
+					#if (fanart is not ''): contextMenuItems.append(('Download Wallpaper', 'XBMC.RunPlugin(%s)' % _addon.build_plugin_url( { 'mode': 'Download' , 'section': ps('section.wallpaper') , 'studio': name+' ('+year+')' , 'img': img , 'url': fanart } ) ))
+					##### Right Click Menu for: TV ##### /\ #####
+					try: _addon.add_directory(pars2, labs2, img=img, fanart=fanart, contextmenu_items=contextMenuItems)
+					except: deb('Error Listing Item',name+'  ('+year+')')
+				else: myNote('Favorites:  '+section,'Section not found'); 
+			if   (section==ps('section.tvshows')): 		set_view('tvshows',addst('anime-view'),True)
+			elif (section==ps('section.movie')): 	set_view('movies' ,addst('movies-view'),True)
+		else: myNote('Favorites:  '+section,'No favorites found *'); set_view('list',addst('default-view')); eod(); return
+	else: myNote('Favorites:  '+section,'No favorites found **'); set_view('list',addst('default-view')); eod(); return
+	#set_view('list',addst('default-view')); 
+	eod()
+
+
+
+
+
+### ############################################################################################################
+### ############################################################################################################
 ##### Queries #####
 _param={}
 ##Notes-> add more here for whatever params you want to use then you can just put the tagname within _param[''] to fetch it later.  or you can use addpr('tagname','defaultvalue').
@@ -501,6 +620,10 @@ def BrowseItems(url,section='',subsection='',pagestart='1',pagecount='1',genre='
 				if (fimg==''): fimg=_artFanart
 				if (img==''): img=_artIcon
 				contextMenuItems.append((ps('cMI.showinfo.name'),ps('cMI.showinfo.url')))
+				contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.1.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url), '' )))
+				if (tfalse(addst("enable-fav-movies-2"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.2.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),'2' )))
+				if (tfalse(addst("enable-fav-movies-3"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.3.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),'3' )))
+				if (tfalse(addst("enable-fav-movies-4"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.movies.4.name'),ps('cMI.favorites.movie.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),'4' )))
 				pars={'mode':'BrowseHosts','url':url,'title':t1b+'  ('+t1c+')','showtitle':t1b,'year':t1c,'img':img,'fanart':fimg}
 				_addon.add_directory(pars,labs,is_folder=True,img=img,fanart=fimg,total_items=ItemCount,contextmenu_items=contextMenuItems)
 			set_view('movies',addst('movies-view'));
@@ -564,11 +687,15 @@ def BrowseItems(url,section='',subsection='',pagestart='1',pagecount='1',genre='
 					else: dnotnow=True
 				else: dnotnow=True
 				if (dnotnow==True):
-					fimg=img
+					fimg=img; labs['tvdb_id']=''
 				###
 				if (fimg==''): fimg=_artFanart
 				if (img==''): img=_artIcon
 				contextMenuItems.append((ps('cMI.showinfo.name'),ps('cMI.showinfo.url')))
+				contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.1.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),urllib.quote_plus(labs['tvdb_id']), '' )))
+				if (tfalse(addst("enable-fav-tv-2"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.2.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),urllib.quote_plus(labs['tvdb_id']),'2' )))
+				if (tfalse(addst("enable-fav-tv-3"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.3.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),urllib.quote_plus(labs['tvdb_id']),'3' )))
+				if (tfalse(addst("enable-fav-tv-4"))==True): contextMenuItems.append((ps('cMI.favorites.tv.add.name')+' '+addst('fav.tv.4.name'),ps('cMI.favorites.tv.add.url') % (sys.argv[0],ps('cMI.favorites.tv.add.mode'),section,urllib.quote_plus(t1b),urllib.quote_plus(t1c),urllib.quote_plus(img),urllib.quote_plus(fimg),urllib.quote_plus(''),urllib.quote_plus(labs['plot']),urllib.quote_plus(''),urllib.quote_plus(url),urllib.quote_plus(labs['tvdb_id']),'4' )))
 				pars={'mode':'BrowseEpisodes','url':url,'title':t1b+'  ('+t1c+')','showtitle':t1b,'year':t1c,'img':img,'fanart':fimg}
 				_addon.add_directory(pars,labs,is_folder=True,img=img,fanart=fimg,total_items=ItemCount,contextmenu_items=contextMenuItems)
 			set_view('tvshows',addst('tvshows-view'));
@@ -648,6 +775,12 @@ def MenuMovies(section=''):
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','year':'2000'},{'title':  cFL_('Year [2000]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','year':'2010'},{'title':  cFL_('Year [2010]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','genre':'Sci-Fi'},{'title':  cFL_('Genre [Sci-Fi]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
+	#
+	_addon.add_directory({'mode': 'FavoritesList','section':section},{'title':  cFL_('Favorites '+addst('fav.movies.1.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-movies-2"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '2'},{'title':  cFL_('Favorites '+addst('fav.movies.2.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-movies-3"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '3'},{'title':  cFL_('Favorites '+addst('fav.movies.3.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-movies-4"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '4'},{'title':  cFL_('Favorites '+addst('fav.movies.4.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	#
 	set_view('list',addst('default-view')); eod()
 
 def MenuTVShows(section=''):
@@ -668,21 +801,27 @@ def MenuTVShows(section=''):
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','year':'2000'},{'title':  cFL_('Year [2000]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','year':'2010'},{'title':  cFL_('Year [2010]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
 	#_addon.add_directory({'mode':'BrowseItems','section':section,'url':_du+tvurl+'/','genre':'Sci-Fi'},{'title':  cFL_('Genre [Sci-Fi]',sclr)},is_folder=True,img=_artIcon,fanart=_artFanart)
+	#
+	_addon.add_directory({'mode': 'FavoritesList','section':section},{'title':  cFL_('Favorites '+addst('fav.tv.1.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-tv-2"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '2'},{'title':  cFL_('Favorites '+addst('fav.tv.2.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-tv-3"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '3'},{'title':  cFL_('Favorites '+addst('fav.tv.3.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	if (tfalse(addst("enable-fav-tv-4"))==True): _addon.add_directory({'mode': 'FavoritesList','section':section,'subfav': '4'},{'title':  cFL_('Favorites '+addst('fav.tv.4.name'),ps('cFL_color3'))},fanart=_artFanart,img=_artIcon)
+	#
 	set_view('list',addst('default-view')); eod()
 
 ##Notes-> Your Main Menu
 def Menu_MainMenu(): #The Main Menu
 	WhereAmI('@ the Main Menu')
 	#Added 'title' to the params passed along with mode as an example of how to do it.  Same can be done for 'url' and others stuff, such as an image or fanart.
-	_addon.add_directory({'mode': 'MenuMovies'},{'title':  cFL_('Movies',ps('clr1'))},is_folder=True,img=_artIcon,fanart=_artFanart)
-	_addon.add_directory({'mode': 'MenuTVShows'},{'title':  cFL_('TV Shows',ps('clr2'))},is_folder=True,img=_artIcon,fanart=_artFanart)
+	_addon.add_directory({'mode': 'MenuMovies'},{'title':  cFL_('Movies',ps('clr1'))},is_folder=True,img=art('movies'),fanart=_artFanart)
+	_addon.add_directory({'mode': 'MenuTVShows'},{'title':  cFL_('TV Shows',ps('clr2'))},is_folder=True,img=art('television'),fanart=_artFanart)
 	#
 	#_addon.add_directory({'mode': 'ASubMenu','title':'This has been a test.'},{'title':  cFL_('Test Folder',ps('cFL_color3'))},is_folder=True,img=_artIcon,fanart=_artFanart)
 	#_addon.add_directory({'mode': 'PlayURL','url':'http://www.eally.org/images/stories/videos/rob-TV.flv'},{'title':  cFL_('Play A Test Video (This is not my video, only an example.)',ps('cFL_color'))},is_folder=False,img=_artIcon,fanart=_artFanart)
 	#
 	_addon.add_directory({'mode': 'ResolverSettings'},{'title':  cFL_('Url-Resolver Settings',ps('cFL_color2'))},is_folder=False,img=_artIcon,fanart=_artFanart)
 	#
-	_addon.add_directory({'mode': 'Settings'}, 				{'title':  cFL_('Plugin Settings',ps('cFL_color2'))}			,is_folder=False,img='http://www.merdb.ru/merdb_ipad.png',fanart=_artFanart)
+	_addon.add_directory({'mode': 'Settings'}, 				{'title':  cFL_('Plugin Settings',ps('cFL_color2'))}			,is_folder=False,img=_artIcon,fanart=_artFanart) #'http://www.merdb.ru/merdb_ipad.png'
 	#Ends the directory listing and prints it to the screen.  if you dont use eod() or something like it, the menu items won't be put to the screen.
 	set_view('list',addst('default-view')); eod()
 
@@ -711,6 +850,10 @@ def check_mode(mode=''):
 	elif (mode=='BrowseYearGenre'): 			BrowseYearGenre(url=addpr('url',''),section=addpr('section',''),subsection=addpr('subsection',''),pagestart=addpr('pagestart',''),pagecount=addpr('pagecount',''),genre=addpr('genre',''),year=addpr('year',''),sortby=addpr('sortby',''),search=addpr('search',''))
 	elif (mode=='BrowseYear'): 						BrowseYear(url=addpr('url',''),section=addpr('section',''),subsection=addpr('subsection',''),pagestart=addpr('pagestart',''),pagecount=addpr('pagecount',''),genre=addpr('genre',''),year=addpr('year',''),sortby=addpr('sortby',''),search=addpr('search',''))
 	elif (mode=='BrowseSort'): 						BrowseSort(url=addpr('url',''),section=addpr('section',''),subsection=addpr('subsection',''),pagestart=addpr('pagestart',''),pagecount=addpr('pagecount',''),genre=addpr('genre',''),year=addpr('year',''),sortby=addpr('sortby',''),search=addpr('search',''))
+	elif (mode=='FavoritesList'):  		  	fav__list(_param['section'],_param['subfav'])
+	elif (mode=='FavoritesEmpty'):  	 		fav__empty(_param['section'],_param['subfav'])
+	elif (mode=='FavoritesRemove'):  			fav__remove(_param['section'],_param['title'],_param['year'],_param['subfav'])
+	elif (mode=='FavoritesAdd'):  		  	fav__add(_param['section'],_param['title'],_param['year'],_param['img'],_param['fanart'],_param['subfav'])
 	#BrowseGenres(url,section='',subsection='',pagestart='1',pagecount='1',genre='',year='',sortby='',search='')
 	#
 	#elif (mode=='YourMode'): 						YourFunction(_param['url'])
