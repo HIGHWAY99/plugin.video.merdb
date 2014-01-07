@@ -224,6 +224,7 @@ def ParseDescription(plot): ## Cleans up the dumb number stuff thats ugly.
 		if ("&#0421;" in plot): plot=plot.replace('&#0421;',"")
 		if ("&#xE9;" in plot):  plot=plot.replace('&#xE9;' ,"e")
 		if ("&#xE2;" in plot):  plot=plot.replace('&#xE2;' ,"a")
+		if ("&#038;" in plot):  plot=plot.replace('&#038;' ,"&")
 		#if (chr(239) in plot):  plot=plot.replace(chr(239) ,"'")
 		#plot=plot.replace(chr('0x92'),"'")
 		if ('&#' in plot) and (';' in plot):
@@ -231,7 +232,9 @@ def ParseDescription(plot): ## Cleans up the dumb number stuff thats ugly.
 			except:	matches=''
 			if (matches is not ''):
 				for match in matches:
-					if (match is not '') and (match is not ' ') and ("&#"+match+";" in plot):  plot=plot.replace("&#"+match+";" ,"")
+					if (match is not '') and (match is not ' ') and ("&#"+match+";" in plot):  
+						try: plot=plot.replace("&#"+match+";" ,"")
+						except: pass
 		#if ("\xb7"  in plot):  plot=plot.replace('\xb7'   ,"-")
 		#if ('&#' in plot) and (';' in plot): plot=unescape_(plot)
 	for i in xrange(127,256):
@@ -281,6 +284,36 @@ try: 		from script.module.metahandler 	import metahandlers
 except: from metahandler 								import metahandlers
 grab=metahandlers.MetaData(preparezip=False)
 def GRABMETA(name,typ,year=None):
+	EnableMeta=tfalse(addst("enableMeta"))
+	if (year==''): year=None
+	if (year==None):
+		try: year=re.search('\s*\((\d\d\d\d)\)',name).group(1)
+		except: year=None
+	if (year is not None): name=name.replace(' ('+year+')','').replace('('+year+')','')
+	if (EnableMeta=='true'):
+		if (typ=='movie'):
+ 			### grab.get_meta(media_type, name, imdb_id='', tmdb_id='', year='', overlay=6)
+			print name; print year;
+			meta = grab.get_meta('movie',name,'',None,year,overlay=6)
+			infoLabels={'rating': meta['rating'],'duration': meta['duration'],'genre': meta['genre'],'mpaa':"rated %s"%meta['mpaa'],'plot': meta['plot'],'title': meta['title'],'writer': meta['writer'],'cover_url': meta['cover_url'],'director': meta['director'],'cast': meta['cast'],'backdrop': meta['backdrop_url'],'backdrop_url': meta['backdrop_url'],'tmdb_id': meta['tmdb_id'],'year': meta['year'],'votes': meta['votes'],'tagline': meta['tagline'],'premiered': meta['premiered'],'trailer_url': meta['trailer_url'],'studio': meta['studio'],'imdb_id': meta['imdb_id'],'thumb_url': meta['thumb_url']}
+			#infoLabels=grab.get_meta("movie",meta_name,imdb_id=imdb_id,tmdb_id=tmdb_id,year=year)
+		elif (typ=='tvshow'):
+			meta = grab.get_meta('tvshow',name,'','',year,overlay=6)
+			infoLabels={'rating': meta['rating'],'genre': meta['genre'],'mpaa':"rated %s"%meta['mpaa'],'plot': meta['plot'],'title': meta['title'],'cover_url': meta['cover_url'],'cast': meta['cast'],'studio': meta['studio'],'banner_url': meta['banner_url'],'backdrop_url': meta['backdrop_url'],'status': meta['status'],'premiered': meta['premiered'],'imdb_id': meta['imdb_id'],'tvdb_id': meta['tvdb_id'],'year': meta['year'],'imgs_prepacked': meta['imgs_prepacked'],'overlay': meta['overlay'],'duration': meta['duration']}
+			#infoLabels=grab.get_meta("tvshow",meta_name,imdb_id=imdb_id)
+		#elif ('episode' in media_type) or (media_type=='e'):
+		#	if len(imdb_id)==0:
+		#		t_infoLabels=grab.get_meta("tvshow",meta_name,imdb_id=imdb_id)
+		#		imdb_id=t_infoLabels['imdb_id']
+		#	try:
+		#		iseason=int(season)
+		#		iepisode=int(episode)
+		#		infoLabels=grab.get_episode_meta(tvshowtitle=meta_name,imdb_id=tv_meta['imdb_id'],season=iseason,episode=iepisode)
+		#	except: infoLabels={'overlay':6,'title':str(season)+'x'+str(episode),'tvdb_id':'','imdb_id':'','cover_url':_artIcon,'poster':_artIcon,'TVShowTitle':meta_name}
+		else: infoLabels={}
+	else: infoLabels={}
+	return infoLabels
+def GRABMETA__(name,typ,year=None):
 	EnableMeta=tfalse(addst("enableMeta"))
 	if (year==''): year=None
 	if (year==None):
@@ -378,7 +411,7 @@ def fav__list(section,subfav=''):
 					#labs2['title']=cFL(name+'  ('+cFL(year,ps('cFL_color2'))+')',ps('cFL_color')); 
 					labs2['title']=cFL(name+'  ('+cFL(year,ps('clr5'))+')',ps('clr3')); 
 					#labs2['title']=cFL(name,ps('cFL_color3'))
-					labs2['image']=img; labs2['fanart']=fanart; labs2['ShowTitle']=name; labs2['year']=year; pars2={'mode': 'GetLinks', 'section': section, 'url': url, 'img': img, 'image': img, 'fanart': fanart, 'title': name, 'year': year }; labs2['plot']=plot
+					labs2['image']=img; labs2['fanart']=fanart; labs2['ShowTitle']=name; labs2['year']=year; pars2={'mode': 'BrowseHosts', 'section': section, 'url': url, 'img': img, 'image': img, 'fanart': fanart, 'title': name, 'year': year }; labs2['plot']=plot
 					##labs2['title']=cFL(name+'  ('+cFL(year,ps('cFL_color2'))+')  ['+cFL(country,ps('cFL_color3'))+']',ps('cFL_color'))
 					#
 					##### Right Click Menu for: TV #####
@@ -578,7 +611,7 @@ def BrowseItems(url,section='',subsection='',pagestart='1',pagecount='1',genre='
 			#return
 			#for url,img,url2,t1a,t1b,t1c,t2a,t2b,t2c,va1a,va1b,va2a,va2b,rv1a,rv1b,rc1v,genres in matches:
 			for url,img,url2,t1a,t1b,t1c,t2a,t2b,t2c in matches:
-				contextMenuItems=[]; labs={}; fimg=''; url=_du+'/'+url; 
+				contextMenuItems=[]; labs={}; fimg=''; url=_du+'/'+url; labs['plot']=''
 				#labs['title']=cFL(t1b+'  ('+cFL(t1c,'red')+')','blue')
 				labs['title']=t1b+'  ('+cFL(t1c,'red')+')'
 				###
@@ -647,7 +680,7 @@ def BrowseItems(url,section='',subsection='',pagestart='1',pagecount='1',genre='
 			#return
 			#for url,img,url2,t1a,t1b,t1c,t2a,t2b,t2c,va1a,va1b,va2a,va2b,rv1a,rv1b,rc1v,genres in matches:
 			for url,img,url2,t1b,t2a,t2b,t1c in matches:
-				contextMenuItems=[]; labs={}; fimg=''; url=_du+''+url; 
+				contextMenuItems=[]; labs={}; fimg=''; url=_du+''+url; labs['plot']=''
 				#labs['title']=cFL(t1b+'  ('+cFL(t1c,'red')+')','blue')
 				labs['title']=t1b+'  ('+cFL(t1c,'red')+')'
 				###
